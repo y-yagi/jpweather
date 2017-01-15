@@ -15,12 +15,67 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+var weatherConversionTable = map[string]string{
+	"clear-day":           "☀",
+	"clear-night":         "🌙",
+	"rain":                "☔",
+	"snow":                "☃",
+	"sleet":               "❄",
+	"wind":                "🍃",
+	"fog":                 "🌁",
+	"cloudy":              "☁",
+	"partly-cloudy-day":   "☀/☁",
+	"partly-cloudy-night": "🌙/☁",
+	"hail":                "❅",
+	"thunderstorm":        "☇",
+}
+
 type config struct {
 	ForecaseApiKey string `yaml:"forecastApiKey"`
 	Home           struct {
 		Lat string `yaml:lat`
 		Lng string `yaml:lng`
 	} `yaml:home`
+}
+
+type weatherData struct {
+	times              []string
+	weathers           []string
+	temperatures       []string
+	windBearings       []string
+	windSpeeds         []string
+	precipProbabilitys []string
+}
+
+func (wd *weatherData) initialize() {
+	wd.times = []string{"時間"}
+	wd.weathers = []string{"天気"}
+	wd.temperatures = []string{"気温"}
+	wd.windBearings = []string{"風向"}
+	wd.windSpeeds = []string{"風速(m/s)"}
+	wd.precipProbabilitys = []string{"降水確率(%)"}
+}
+
+func (wd *weatherData) setForecaseData(data forecast.DataPoint) {
+	weatherTime := time.Unix(int64(data.Time), 0)
+	wd.times = append(wd.times, fmt.Sprintf("%02d", weatherTime.Hour()))
+	wd.weathers = append(wd.weathers, weatherConversionTable[data.Icon])
+	wd.temperatures = append(wd.temperatures, fmt.Sprintf("%.1f", float32(data.Temperature)))
+	wd.precipProbabilitys = append(wd.precipProbabilitys, fmt.Sprintf("%v", float32(data.PrecipProbability)*1000))
+	wd.windBearings = append(wd.windBearings, convertDegToCompass(data.WindBearing))
+	wd.windSpeeds = append(wd.windSpeeds, fmt.Sprintf("%.1f", convertMilePerHourToMS(float64(data.WindSpeed))))
+}
+
+func (wd *weatherData) renderWeather(w io.Writer) {
+	table := tablewriter.NewWriter(w)
+	table.SetHeader(wd.times)
+	table.Append(wd.weathers)
+	table.Append(wd.temperatures)
+	table.Append(wd.precipProbabilitys)
+	table.Append(wd.windBearings)
+	table.Append(wd.windSpeeds)
+	table.SetBorder(false)
+	table.Render()
 }
 
 func loadConfig() (*config, error) {
@@ -64,31 +119,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	times := []string{"時間"}
-	weathers := []string{"天気"}
-	temperatures := []string{"気温"}
-	windBearings := []string{"風向"}
-	windSpeeds := []string{"風速(m/s)"}
-	precipProbabilitys := []string{"降水確率(%)"}
 	var showDays int
+	var wd weatherData
+	wd.initialize()
 
 	needShowDay := true
 	w := os.Stdout
-	table := tablewriter.NewWriter(w)
-	weatherConversionTable := map[string]string{
-		"clear-day":           "☀",
-		"clear-night":         "🌙",
-		"rain":                "☔",
-		"snow":                "☃",
-		"sleet":               "❄",
-		"wind":                "🍃",
-		"fog":                 "🌁",
-		"cloudy":              "☁",
-		"partly-cloudy-day":   "☀/☁",
-		"partly-cloudy-night": "🌙/☁",
-		"hail":                "❅",
-		"thunderstorm":        "☇",
-	}
 
 	f, err := forecast.Get(config.ForecaseApiKey, config.Home.Lat, config.Home.Lng, "now", forecast.AUTO)
 	if err != nil {
@@ -103,33 +139,13 @@ func main() {
 			needShowDay = false
 		}
 
-		times = append(times, fmt.Sprintf("%02d", weatherTime.Hour()))
-		weathers = append(weathers, weatherConversionTable[data.Icon])
-		temperatures = append(temperatures, fmt.Sprintf("%.1f", float32(data.Temperature)))
-		precipProbabilitys = append(precipProbabilitys, fmt.Sprintf("%v", float32(data.PrecipProbability)*1000))
-		windBearings = append(windBearings, convertDegToCompass(data.WindBearing))
-		windSpeeds = append(windSpeeds, fmt.Sprintf("%.1f", convertMilePerHourToMS(float64(data.WindSpeed))))
+		wd.setForecaseData(data)
 
 		if weatherTime.Hour() == 23 {
-			table.SetHeader(times)
-			table.Append(weathers)
-			table.Append(temperatures)
-			table.Append(precipProbabilitys)
-			table.Append(windBearings)
-			table.Append(windSpeeds)
-			table.SetBorder(false)
-			table.Render()
-			table = tablewriter.NewWriter(w)
-
+			wd.renderWeather(w)
+			wd.initialize()
 			fmt.Fprintf(w, "\n\n")
-
 			needShowDay = true
-			times = []string{"時間"}
-			weathers = []string{"天気"}
-			temperatures = []string{"気温"}
-			windBearings = []string{"風向"}
-			windSpeeds = []string{"風速(m/s)"}
-			precipProbabilitys = []string{"降水確率(%)"}
 			showDays += 1
 		}
 
