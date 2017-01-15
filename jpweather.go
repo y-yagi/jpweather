@@ -116,7 +116,6 @@ func loadConfig() (*config, error) {
 
 func main() {
 	config, err := loadConfig()
-
 	if err != nil {
 		fmt.Printf("Config file load Error: %v\nPlease create a config file.\n", err)
 		os.Exit(1)
@@ -128,7 +127,7 @@ func main() {
 
 	w := os.Stdout
 
-	f, err := forecast.Get(config.ForecaseApiKey, config.Home.Lat, config.Home.Lng, "now", forecast.AUTO)
+	f, err := forecast.Get(config.ForecaseApiKey, config.Home.Lat, config.Home.Lng, "now", forecast.SI)
 	if err != nil {
 		fmt.Printf("API Error: %v\n", err)
 		os.Exit(1)
