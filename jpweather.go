@@ -62,7 +62,7 @@ func (wd *weatherData) setForecaseData(data forecast.DataPoint) {
 	wd.date = weatherTime
 	wd.times = append(wd.times, fmt.Sprintf("%02d", weatherTime.Hour()))
 	wd.weathers = append(wd.weathers, weatherConversionTable[data.Icon])
-	wd.temperatures = append(wd.temperatures, fmt.Sprintf("%.1f", float32(data.Temperature)))
+	wd.temperatures = append(wd.temperatures, fmt.Sprintf("%.1f", float32(data.ApparentTemperature)))
 	wd.precipProbabilitys = append(wd.precipProbabilitys, fmt.Sprintf("%v", float32(data.PrecipProbability)*1000))
 	wd.windBearings = append(wd.windBearings, convertDegToCompass(data.WindBearing))
 	wd.windSpeeds = append(wd.windSpeeds, fmt.Sprintf("%.1f", convertMilePerHourToMS(float64(data.WindSpeed))))
