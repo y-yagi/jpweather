@@ -15,20 +15,23 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-var weatherConversionTable = map[string]string{
-	"clear-day":           "☀",
-	"clear-night":         "🌙",
-	"rain":                "☔",
-	"snow":                "☃",
-	"sleet":               "❄",
-	"wind":                "🍃",
-	"fog":                 "🌁",
-	"cloudy":              "☁",
-	"partly-cloudy-day":   "☀/☁",
-	"partly-cloudy-night": "🌙/☁",
-	"hail":                "❅",
-	"thunderstorm":        "☇",
-}
+var (
+	weatherConversionTable = map[string]string{
+		"clear-day":           "☀",
+		"clear-night":         "🌙",
+		"rain":                "☔",
+		"snow":                "☃",
+		"sleet":               "❄",
+		"wind":                "🍃",
+		"fog":                 "🌁",
+		"cloudy":              "☁",
+		"partly-cloudy-day":   "☀/☁",
+		"partly-cloudy-night": "🌙/☁",
+		"hail":                "❅",
+		"thunderstorm":        "☇",
+	}
+	compasses = []string{"北", "北北東", "北東", "東北東", "東", "東南東", "南東", "南南東", "南", "南南西", "南西", "西南西", "西", "西北西", "北西", "北北西"}
+)
 
 type config struct {
 	ForecaseAPIKEY string `yaml:"forecastApiKey"`
@@ -92,7 +95,6 @@ func convertMilePerHourToMS(windSpeed float64) float64 {
 }
 
 func convertDegToCompass(deg float64) string {
-	compasses := []string{"北", "北北東", "北東", "東北東", "東", "東南東", "南東", "南南東", "南", "南南西", "南西", "西南西", "西", "西北西", "北西", "北北西"}
 	val := int((deg / 22.5) + .5)
 	return compasses[(val % 16)]
 }
