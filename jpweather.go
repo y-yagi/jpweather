@@ -31,7 +31,7 @@ var weatherConversionTable = map[string]string{
 }
 
 type config struct {
-	ForecaseApiKey string `yaml:"forecastApiKey"`
+	ForecaseAPIKEY string `yaml:"forecastApiKey"`
 	Home           struct {
 		Lat string `yaml:lat`
 		Lng string `yaml:lng`
@@ -127,7 +127,7 @@ func main() {
 
 	w := os.Stdout
 
-	f, err := forecast.Get(config.ForecaseApiKey, config.Home.Lat, config.Home.Lng, "now", forecast.SI)
+	f, err := forecast.Get(config.ForecaseAPIKEY, config.Home.Lat, config.Home.Lng, "now", forecast.SI)
 	if err != nil {
 		fmt.Printf("API Error: %v\n", err)
 		os.Exit(1)
@@ -141,7 +141,7 @@ func main() {
 			wd.showWeather(w)
 			wd.initialize()
 			fmt.Fprintf(w, "\n\n")
-			showDays += 1
+			showDays++
 		}
 
 		if showDays == 2 {
